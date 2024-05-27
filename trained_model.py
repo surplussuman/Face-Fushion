@@ -31,7 +31,7 @@ encodings, labels = get_encodings_and_labels(dataset_path)
 
 # Save the encodings and labels
 data = {"encodings": encodings, "labels": labels}
-with open('trained_model.pkl', 'wb') as f:
+with open('models/trained_model.pkl', 'wb') as f:
     pickle.dump(data, f)
 
 print("Model trained and saved as 'trained_model.pkl'")

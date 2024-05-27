@@ -3,7 +3,7 @@ import cv2
 import pickle
 
 # Load the trained model
-with open('trained_model.pkl', 'rb') as f:
+with open('models/trained_model.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # Initialize webcam
