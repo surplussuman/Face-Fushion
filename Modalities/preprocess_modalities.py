@@ -1,4 +1,4 @@
-import cv2
+'''import cv2
 import numpy as np
 from facenet_pytorch import InceptionResnetV1
 import torch
@@ -84,3 +84,152 @@ with open('models/multimodal_face_recognition_model.pkl', 'wb') as f:
     pickle.dump((classifier, label_encoder), f)
 
 print("Multimodal model trained and saved as 'multimodal_face_recognition_model.pkl'")
+'''
+import os
+import cv2
+import torch
+from facenet_pytorch import MTCNN, InceptionResnetV1, extract_face
+
+# Load the pre-trained face detection and recognition models
+mtcnn = MTCNN(keep_all=True)
+facenet = InceptionResnetV1(pretrained='vggface2').eval()
+
+# Path to the folder containing RGB images
+rgb_folder_path = 'dataset_rgb'
+ir_folder_path = 'dataset_ir'
+
+# Function to process a folder of images
+def process_images(rgb_folder_path, ir_folder_path):
+    for label_folder in os.listdir(rgb_folder_path):
+        for root, _, files in os.walk(os.path.join(rgb_folder_path, label_folder)):
+            for file in files:
+                if file.endswith(('.png', '.jpg', '.jpeg')):
+                    try:
+                        # Load the RGB image
+                        rgb_image_path = os.path.join(root, file)
+                        rgb_image = cv2.imread(rgb_image_path)
+                        if rgb_image is None:
+                            print(f'Failed to load RGB image: {rgb_image_path}')
+                            continue
+
+                        # Load the IR image
+                        ir_image_path = os.path.join(ir_folder_path, label_folder, file)
+                        ir_image = cv2.imread(ir_image_path, cv2.IMREAD_GRAYSCALE)
+                        if ir_image is None:
+                            print(f'Failed to load IR image: {ir_image_path}')
+                            continue
+
+                        # Detect faces in the images
+                        faces_rgb = mtcnn(rgb_image)
+                        faces_ir = mtcnn(ir_image)
+
+                        # Check if any faces were detected
+                        if faces_rgb is None or len(faces_rgb) == 0 or faces_ir is None or len(faces_ir) == 0:
+                            print(f'No faces detected in {file}')
+                            continue
+
+                        # Ensure the faces have the correct dimensions
+                        faces_rgb = faces_rgb.permute(0, 3, 1, 2) if faces_rgb.ndim == 4 else faces_rgb.unsqueeze(0)
+                        faces_ir = faces_ir.unsqueeze(0).unsqueeze(0)
+
+                        # Get the embeddings for the RGB and IR faces
+                        embedding_rgb = facenet(faces_rgb.float()).detach().numpy().flatten()
+                        embedding_ir = facenet(faces_ir.float()).detach().numpy().flatten()
+
+                        # Process the embeddings (e.g., save to a file, perform matching, etc.)
+                        print(f'Processed {file}: RGB Embedding Shape: {embedding_rgb.shape}, IR Embedding Shape: {embedding_ir.shape}')
+
+                    except Exception as e:
+                        print(f'Error processing {file}: {e}')
+
+# Process the images in the folders
+process_images(rgb_folder_path, ir_folder_path)
+
+'''import os
+import cv2
+import numpy as np
+import torch
+from facenet_pytorch import InceptionResnetV1, MTCNN, extract_face
+
+# Load the pre-trained face detection and recognition models
+mtcnn = MTCNN(keep_all=True)
+facenet_rgb = InceptionResnetV1(pretrained='vggface2').eval()
+facenet_ir = InceptionResnetV1(pretrained='casia-webface').eval()
+
+# Path to the folder containing RGB images
+rgb_folder = 'dataset_rgb'
+
+# Path to the folder containing IR images
+ir_folder = 'dataset_ir'
+
+# Function to process a single image
+def process_image(image_path):
+    # Read the image
+    image = cv2.imread(image_path)
+    
+    # Detect faces in the image
+    faces = mtcnn(image)
+    
+    if faces is not None:
+        # Extract the first face
+        face = extract_face(image, faces[0])
+        
+        # Preprocess the face for the RGB model
+        face_rgb = cv2.resize(face, (160, 160))
+        face_rgb = torch.from_numpy(face_rgb).permute(2, 0, 1).unsqueeze(0).float()
+        
+        # Preprocess the face for the IR model
+        face_ir = cv2.resize(face, (160, 160))
+        face_ir = torch.from_numpy(face_ir).unsqueeze(0).unsqueeze(0).float()
+        
+        # Get the embeddings for the RGB and IR faces
+        embedding_rgb = facenet_rgb(face_rgb).detach().numpy().flatten()
+        embedding_ir = facenet_ir(face_ir).detach().numpy().flatten()
+        
+        return embedding_rgb, embedding_ir
+    else:
+        return None, None
+
+# Function to process all images in a folder
+def process_folder(folder):
+    embeddings_rgb = []
+    embeddings_ir = []
+    labels = []
+
+    # Iterate over all files in the folder
+    for filename in os.listdir(folder):
+        # Process only image files
+        if filename.endswith(('.png', '.jpg', '.jpeg')):
+            # Get the full path to the image
+            image_path = os.path.join(folder, filename)
+            
+            # Process the image
+            embedding_rgb, embedding_ir = process_image(image_path)
+            
+            # If embeddings are obtained, append them to the list
+            if embedding_rgb is not None and embedding_ir is not None:
+                embeddings_rgb.append(embedding_rgb)
+                embeddings_ir.append(embedding_ir)
+                labels.append(filename.split('.')[0])  # Extract label from filename
+    
+    return embeddings_rgb, embeddings_ir, labels
+
+# Process the RGB folder
+embeddings_rgb, embeddings_ir, labels = process_folder(rgb_folder)
+
+# Process the IR folder
+embeddings_rgb_ir, embeddings_ir_ir, labels_ir = process_folder(ir_folder)
+
+# Concatenate the embeddings and labels
+embeddings_rgb.extend(embeddings_rgb_ir)
+embeddings_ir.extend(embeddings_ir_ir)
+labels.extend(labels_ir)
+
+# Convert lists to arrays
+embeddings_rgb = np.array(embeddings_rgb)
+embeddings_ir = np.array(embeddings_ir)
+labels = np.array(labels)
+
+# Print the shapes of the arrays
+print(embeddings_rgb.shape, embeddings_ir.shape, labels.shape)
+'''
