@@ -11,6 +11,7 @@ dataset_path = 'dataset'
 encodings = []
 labels = []
 
+print("Started encoding")
 # Function to read images and labels from the dataset
 def get_encodings_and_labels(path):
     for root, dirs, files in os.walk(path):
@@ -26,9 +27,11 @@ def get_encodings_and_labels(path):
                     labels.append(label)
     return encodings, labels
 
+print("Done encodeing")
 # Load the images and labels
 encodings, labels = get_encodings_and_labels(dataset_path)
 
+print("Writing the model")
 # Save the encodings and labels
 data = {"encodings": encodings, "labels": labels}
 with open('models/trained_model.pkl', 'wb') as f:
