@@ -1,11 +1,10 @@
+import face_recognition
 import cv2
+import pickle
 
-# Load pre-trained face detection and recognition models
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-
-# Load the trained model for face recognition
-recognizer.read('trained_model.yml')
+# Load the trained model
+with open('trained_model.pkl', 'rb') as f:
+    data = pickle.load(f)
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
@@ -14,23 +13,23 @@ while True:
     # Read the frame from the webcam
     ret, frame = cap.read()
 
-    # Convert the frame to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Convert the frame to RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # Detect faces in the frame
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    # Detect faces and get encodings
+    face_locations = face_recognition.face_locations(rgb_frame)
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-    # Iterate over detected faces
-    for (x, y, w, h) in faces:
-        # Draw a rectangle around the detected face
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        matches = face_recognition.compare_faces(data["encodings"], face_encoding)
+        name = "Unknown"
 
-        # Recognize the face
-        label, confidence = recognizer.predict(gray[y:y+h, x:x+w])
+        if True in matches:
+            first_match_index = matches.index(True)
+            name = data["labels"][first_match_index]
 
-        # Display the recognized face label and confidence level
-        text = f'Person {label} ({confidence:.2f})'
-        cv2.putText(frame, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+        cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
     # Display the frame
     cv2.imshow('Face Recognition', frame)
