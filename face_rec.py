@@ -21,15 +21,25 @@ while True:
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-        matches = face_recognition.compare_faces(data["encodings"], face_encoding)
-        name = "Unknown"
+        # Calculate distances between the face encoding and known encodings
+        distances = face_recognition.face_distance(data["encodings"], face_encoding)
+        
+        # Find the best match
+        min_distance = min(distances)
+        if min_distance < 0.6:  # Threshold for considering a match (you can adjust this)
+            best_match_index = distances.tolist().index(min_distance)
+            name = data["labels"][best_match_index]
+            confidence = (1 - min_distance) * 100  # Convert distance to confidence percentage
+        else:
+            name = "Unknown"
+            confidence = 0
 
-        if True in matches:
-            first_match_index = matches.index(True)
-            name = data["labels"][first_match_index]
-
+        # Draw rectangle around the face
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-        cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        
+        # Display name and confidence
+        text = f"{name} ({confidence:.2f}%)"
+        cv2.putText(frame, text, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
     # Display the frame
     cv2.imshow('Face Recognition', frame)
