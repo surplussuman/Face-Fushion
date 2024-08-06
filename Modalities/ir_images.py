@@ -29,5 +29,5 @@ def convert_rgb_to_ir(label):
                 cv2.imwrite(ir_filename, img_ir)
 
 # Convert RGB images to simulated IR images for the given label
-label = input("Enter person to conert to IR : ")
+label = input("Enter person to convert to IR : ")
 convert_rgb_to_ir(label)

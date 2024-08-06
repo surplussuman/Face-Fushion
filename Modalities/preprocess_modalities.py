@@ -85,7 +85,7 @@ with open('models/multimodal_face_recognition_model.pkl', 'wb') as f:
 
 print("Multimodal model trained and saved as 'multimodal_face_recognition_model.pkl'")
 '''
-import os
+'''import os
 import cv2
 import torch
 from facenet_pytorch import MTCNN, InceptionResnetV1, extract_face
@@ -144,7 +144,7 @@ def process_images(rgb_folder_path, ir_folder_path):
 
 # Process the images in the folders
 process_images(rgb_folder_path, ir_folder_path)
-
+'''
 '''import os
 import cv2
 import numpy as np
@@ -233,3 +233,54 @@ labels = np.array(labels)
 # Print the shapes of the arrays
 print(embeddings_rgb.shape, embeddings_ir.shape, labels.shape)
 '''
+
+import os
+import cv2
+from facenet_pytorch import MTCNN
+
+# Load the MTCNN model for face detection
+mtcnn = MTCNN(keep_all=False)  # Set keep_all=False to detect a single face
+
+# Function to preprocess images
+def preprocess_images(input_folder, output_folder, max_images_per_label=100):
+    for label in os.listdir(input_folder):
+        label_input_path = os.path.join(input_folder, label)
+        label_output_path = os.path.join(output_folder, label)
+        os.makedirs(label_output_path, exist_ok=True)
+
+        image_count = 0
+        for file in os.listdir(label_input_path):
+            if file.endswith(('.png', '.jpg', '.jpeg')):
+                img_path = os.path.join(label_input_path, file)
+                img = cv2.imread(img_path)
+                if img is None:
+                    continue
+
+                # Detect face
+                boxes, _ = mtcnn.detect(img)
+
+                if boxes is not None:
+                    for box in boxes:
+                        x1, y1, x2, y2 = map(int, box)
+                        face = img[y1:y2, x1:x2]
+
+                        if face.size == 0:  # Check if the cropped face is empty
+                            continue
+
+                        # Align and resize the face
+                        face = cv2.resize(face, (160, 160))
+
+                        # Save the preprocessed face
+                        save_path_img = os.path.join(label_output_path, file)
+                        cv2.imwrite(save_path_img, face)
+
+                        image_count += 1
+                        if image_count >= max_images_per_label:
+                            break
+
+            if image_count >= max_images_per_label:
+                break
+
+# Example usage
+preprocess_images('dataset_rgb', 'preprocessed_rgb', max_images_per_label=100)
+preprocess_images('dataset_ir', 'preprocessed_ir', max_images_per_label=100)
