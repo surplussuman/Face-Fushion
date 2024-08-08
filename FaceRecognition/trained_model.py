@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 
 # Path to the dataset
-dataset_path = 'dataset'
+dataset_path = '../Advance enhancement/data/dataset_rgb_agum'
 
 # Initialize lists to hold face encodings and corresponding labels
 encodings = []
@@ -38,7 +38,7 @@ encodings, labels = get_encodings_and_labels(dataset_path)
 print("Writing the model")
 # Save the encodings and labels
 data = {"encodings": encodings, "labels": labels}
-with open('models/trained_model.pkl', 'wb') as f:
+with open('models/trained_model2.pkl', 'wb') as f:
     pickle.dump(data, f)
 
 print("Model trained and saved as 'trained_model.pkl'")
