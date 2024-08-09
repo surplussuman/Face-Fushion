@@ -328,7 +328,7 @@ facenet_ir = InceptionResnetV1(pretrained='casia-webface').eval()
 # Load the face detection model (MTCNN)
 mtcnn = MTCNN(keep_all=True)
 
-# Load the trained model and label encoder
+# Load the trained model and label encoder 
 clf = joblib.load('models/face_fusion_model.pkl')
 le = joblib.load('models/label_encoder.pkl')
 
