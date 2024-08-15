@@ -3,15 +3,21 @@ import cv2
 import pickle
 
 # Load the trained model
-with open('models/trained_model.pkl', 'rb') as f:
+with open('models/trained_model_cnn.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # Initialize webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
+
+# print("Loaded encodings:", data["encodings"])
+# print("Loaded labels:", data["labels"])
+
 
 while True:
     # Read the frame from the webcam
     ret, frame = cap.read()
+
+    frame = cv2.resize(frame, (640,480))
 
     # Convert the frame to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -20,9 +26,15 @@ while True:
     face_locations = face_recognition.face_locations(rgb_frame)
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
+    # print("Face locations:", face_locations)
+    # print("Face encodings:", face_encodings)
+
+
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         # Calculate distances between the face encoding and known encodings
         distances = face_recognition.face_distance(data["encodings"], face_encoding)
+
+        # print("Distances", distances)
         
         # Find the best match
         min_distance = min(distances)
