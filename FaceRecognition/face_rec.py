@@ -46,6 +46,9 @@ while True:
             name = "Unknown"
             confidence = 0
 
+        # print(f"Detected {name} with confidence {confidence:.2f}%")
+
+
         # Draw rectangle around the face
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
         
