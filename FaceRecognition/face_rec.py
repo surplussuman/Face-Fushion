@@ -7,7 +7,7 @@ with open('models/trained_model_cnn.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # Initialize webcam
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture('rtsp://admin:admin@123@172.16.21.15:554/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif')
 
 # print("Loaded encodings:", data["encodings"])
 # print("Loaded labels:", data["labels"])
