@@ -28,7 +28,7 @@ def generate_dataset(label):
             cropped_face = img[y:y+h,x:x+w]
         return cropped_face
      
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
     img_id = 0
 
     path_rgb = 'dataset/'
